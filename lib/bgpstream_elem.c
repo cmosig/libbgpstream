@@ -311,11 +311,14 @@ char *bgpstream_elem_custom_snprintf(char *buf, size_t len,
     ADD_PIPE;
 
     /* AGGREGATOR IP */
-    if (bgpstream_addr_ntop(buf_p, B_REMAIN, &elem->aggregator.aggregator_addr) == NULL &&
-        errno == ENOSPC) {
-      return NULL;
+    if (&elem->aggregator.has_aggregator)
+    {
+        if (bgpstream_addr_ntop(buf_p, B_REMAIN, &elem->aggregator.aggregator_addr) == NULL &&
+            errno == ENOSPC) {
+          return NULL;
+        }
+        SEEK_STR_END;
     }
-    SEEK_STR_END;
 
 #ifdef WITH_RPKI
     /* RPKI validation */
@@ -358,9 +361,13 @@ char *bgpstream_elem_custom_snprintf(char *buf, size_t len,
     ADD_PIPE;
 
     /* AGGREGATOR IP */
-    if (bgpstream_addr_ntop(buf_p, B_REMAIN, &elem->aggregator.aggregator_addr) == NULL &&
-        errno == ENOSPC) {
-      return NULL;
+    if (&elem->aggregator.has_aggregator)
+    {
+        if (bgpstream_addr_ntop(buf_p, B_REMAIN, &elem->aggregator.aggregator_addr) == NULL &&
+            errno == ENOSPC) {
+          return NULL;
+        }
+        SEEK_STR_END;
     }
     /* END OF LINE */
     break;
