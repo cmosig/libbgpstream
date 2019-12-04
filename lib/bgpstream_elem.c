@@ -311,7 +311,7 @@ char *bgpstream_elem_custom_snprintf(char *buf, size_t len,
     ADD_PIPE;
 
     /* AGGREGATOR IP */
-    if (&elem->aggregator.has_aggregator)
+    if (elem->aggregator.has_aggregator)
     {
         if (bgpstream_addr_ntop(buf_p, B_REMAIN, &elem->aggregator.aggregator_addr) == NULL &&
             errno == ENOSPC) {
@@ -361,7 +361,7 @@ char *bgpstream_elem_custom_snprintf(char *buf, size_t len,
     ADD_PIPE;
 
     /* AGGREGATOR IP */
-    if (&elem->aggregator.has_aggregator)
+    if (elem->aggregator.has_aggregator)
     {
         if (bgpstream_addr_ntop(buf_p, B_REMAIN, &elem->aggregator.aggregator_addr) == NULL &&
             errno == ENOSPC) {
