@@ -359,16 +359,6 @@ char *bgpstream_elem_custom_snprintf(char *buf, size_t len,
     ADD_PIPE;
     /* NEW STATE (empty) */
     ADD_PIPE;
-
-    /* AGGREGATOR IP */
-    if (elem->aggregator.has_aggregator)
-    {
-        if (bgpstream_addr_ntop(buf_p, B_REMAIN, &elem->aggregator.aggregator_addr) == NULL &&
-            errno == ENOSPC) {
-          return NULL;
-        }
-        SEEK_STR_END;
-    }
     /* END OF LINE */
     break;
 
