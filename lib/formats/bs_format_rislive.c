@@ -298,8 +298,6 @@ static bgpstream_format_status_t
 process_unsupported_message(bgpstream_format_t *format,
                             bgpstream_record_t *record)
 {
-  bgpstream_log(BGPSTREAM_LOG_WARN, "Unsupported RIS Live message: %s",
-                STATE->json_string_buffer);
   record->status = BGPSTREAM_RECORD_STATUS_UNSUPPORTED_RECORD;
   record->collector_name[0] = '\0';
   return BGPSTREAM_FORMAT_UNSUPPORTED_MSG;
@@ -415,16 +413,34 @@ again:
     }
 
     if (jsmn_streq(STATE->json_string_buffer, t, "type") == 1) {
-      // outer message envelope type, must be "ris_message"
+      // outer message envelope type, must be "ris_message" or "ris_error"
       NEXT_TOK;
       jsmn_type_assert(t, JSMN_STRING);
-      if (jsmn_streq(STATE->json_string_buffer, t, "ris_message") != 1) {
-        // TODO: consider handling error message (ris_error)
+      if (jsmn_streq(STATE->json_string_buffer, t, "ris_message") == 1) {
+        // move on to continue processing the data of the ris message
+        NEXT_TOK;
+      } else if (jsmn_streq(STATE->json_string_buffer, t, "ris_error") == 1) {
+        // the message is a "ris_error" message
+        // example: {"data":{"message":"msg content"}}
+        NEXT_TOK;
+        NEXT_TOK;
+        NEXT_TOK;
+        // move token to "message" key and check key name
+        if (jsmn_streq(STATE->json_string_buffer, t, "message") != 1){
+          bgpstream_log(BGPSTREAM_LOG_ERR, "Invalid RIS Live error: %s",
+                        STATE->json_string_buffer);
+          goto corrupted;
+        }
+        NEXT_TOK;
+        jsmn_type_assert(t, JSMN_STRING);
+        bgpstream_log(BGPSTREAM_LOG_WARN, "RIS-Live error message: '%.*s'",
+                      t->end - t->start, STATE->json_string_buffer + t->start);
+        goto ok;
+      } else {
         bgpstream_log(BGPSTREAM_LOG_ERR, "Invalid RIS Live message type: '%.*s'",
                       t->end - t->start, STATE->json_string_buffer + t->start);
         goto corrupted;
       }
-      NEXT_TOK;
     } else if (jsmn_streq(STATE->json_string_buffer, t, "data") == 1) {
       NEXT_TOK;
       jsmn_type_assert(t, JSMN_OBJECT);
@@ -458,22 +474,16 @@ again:
     RDATA->msg_type = RISLIVE_MSG_TYPE_UPDATE;
     rc = process_bgp_message(format, record);
     break;
-  case 'O':
-    RDATA->msg_type = RISLIVE_MSG_TYPE_OPEN;
-    rc = process_bgp_message(format, record);
-    break;
-  case 'N':
-    RDATA->msg_type = RISLIVE_MSG_TYPE_NOTIFICATION;
-    rc = process_bgp_message(format, record);
-    break;
-  case 'K':
-    RDATA->msg_type = RISLIVE_MSG_TYPE_KEEPALIVE;
-    rc = process_bgp_message(format, record);
-    break;
   case 'R':
     RDATA->msg_type = RISLIVE_MSG_TYPE_STATUS;
     rc = process_status_message(format, record);
     break;
+  case 'O':
+    // skip OPEN messages
+  case 'N':
+    // skip NOTIFICATION messages
+  case 'K':
+    // skip KEEPALIVE messages
   default:
     rc = BGPSTREAM_FORMAT_UNSUPPORTED_MSG;
     break;
@@ -633,14 +643,6 @@ int bs_format_rislive_get_next_elem(bgpstream_format_t *format,
     rc = 1;
     break;
   case RISLIVE_MSG_TYPE_OPEN:
-    RDATA->elem->type = BGPSTREAM_ELEM_TYPE_PEERSTATE;
-    // TODO: add OPEN message parsing to bgpstream_parsebgp_common
-    // TODO: also parse the "direction" field from ris-live JSON
-    RDATA->elem->old_state = BGPSTREAM_ELEM_PEERSTATE_UNKNOWN;
-    RDATA->elem->new_state = BGPSTREAM_ELEM_PEERSTATE_UNKNOWN;
-    RDATA->end_of_elems = 1;
-    rc = 1;
-    break;
   case RISLIVE_MSG_TYPE_NOTIFICATION:
   case RISLIVE_MSG_TYPE_KEEPALIVE:
   default:
