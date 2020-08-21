@@ -319,6 +319,13 @@ char *bgpstream_elem_custom_snprintf(char *buf, size_t len,
         }
         SEEK_STR_END;
     }
+    ADD_PIPE;
+
+    /* MULTI_EXIT_DISC / MED */
+    c = snprintf(buf_p, B_REMAIN, "%" PRIu32, elem->med);
+    written += c;
+    buf_p += c;
+
 
 #ifdef WITH_RPKI
     /* RPKI validation */
@@ -359,6 +366,9 @@ char *bgpstream_elem_custom_snprintf(char *buf, size_t len,
     ADD_PIPE;
     /* NEW STATE (empty) */
     ADD_PIPE;
+    /* AGG IP (empty) */
+    ADD_PIPE;
+    /* MED (empty) */
     /* END OF LINE */
     break;
 
@@ -387,7 +397,12 @@ char *bgpstream_elem_custom_snprintf(char *buf, size_t len,
     written += c;
     buf_p += c;
 
+    ADD_PIPE;
+    /* AGG IP (empty) */
+    ADD_PIPE;
+    /* MED (empty) */
     /* END OF LINE */
+
     break;
 
   default:
