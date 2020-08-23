@@ -322,9 +322,11 @@ char *bgpstream_elem_custom_snprintf(char *buf, size_t len,
     ADD_PIPE;
 
     /* MULTI_EXIT_DISC / MED */
-    c = snprintf(buf_p, B_REMAIN, "%" PRIu32, elem->med);
-    written += c;
-    buf_p += c;
+    if (elem->has_med) {
+        c = snprintf(buf_p, B_REMAIN, "%" PRIu32, elem->med);
+        written += c;
+        buf_p += c;
+    }
 
 
 #ifdef WITH_RPKI
