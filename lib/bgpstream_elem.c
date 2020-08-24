@@ -391,6 +391,10 @@ char *bgpstream_elem_custom_snprintf(char *buf, size_t len,
     ADD_PIPE;
     /* NEW STATE (empty) */
     ADD_PIPE;
+    /* Atomic Agg (empty) */
+    ADD_PIPE;
+    /* AGG ASN (empty) */
+    ADD_PIPE;
     /* AGG IP (empty) */
     ADD_PIPE;
     /* MED (empty) */
@@ -423,11 +427,14 @@ char *bgpstream_elem_custom_snprintf(char *buf, size_t len,
     buf_p += c;
 
     ADD_PIPE;
+    /* Atomic Agg (empty) */
+    ADD_PIPE;
+    /* AGG ASN (empty) */
+    ADD_PIPE;
     /* AGG IP (empty) */
     ADD_PIPE;
     /* MED (empty) */
     /* END OF LINE */
-
     break;
 
   default:
