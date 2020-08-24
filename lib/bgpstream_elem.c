@@ -332,7 +332,7 @@ char *bgpstream_elem_custom_snprintf(char *buf, size_t len,
         ADD_PIPE;
 
         /* AGGREGATOR ASN */
-        c = snprintf(buf_p, B_REMAIN, "%" PRIu32 " ",
+        c = snprintf(buf_p, B_REMAIN, "%" PRIu32,
            elem->aggregator.aggregator_asn);
         written += c;
         buf_p += c;
