@@ -310,16 +310,39 @@ char *bgpstream_elem_custom_snprintf(char *buf, size_t len,
     /* NEW STATE (empty) */
     ADD_PIPE;
 
-    /* AGGREGATOR IP */
-    if (elem->aggregator.has_aggregator)
+    /* AGGREGATE AG/NAG (atomic aggregate) */
+    if (elem->atomic_aggregate == 1) {
+        c = snprintf(buf_p, B_REMAIN, "1");
+    } else {
+        c = snprintf(buf_p, B_REMAIN, "0");
+    }
+    written += c;
+    buf_p += c;
+    ADD_PIPE;
+
+    /* AGGREGATOR */
+    if (elem->aggregator.has_aggregator > 0)
     {
+        /* AGGREGATOR IP */
         if (bgpstream_addr_ntop(buf_p, B_REMAIN, &elem->aggregator.aggregator_addr) == NULL &&
             errno == ENOSPC) {
           return NULL;
         }
         SEEK_STR_END;
+        ADD_PIPE;
+
+        /* AGGREGATOR ASN */
+        c = snprintf(buf_p, B_REMAIN, "%" PRIu32 " ",
+           elem->aggregator.aggregator_asn);
+        written += c;
+        buf_p += c;
+        SEEK_STR_END;
+        ADD_PIPE;
+
+    } else {
+        ADD_PIPE;
+        ADD_PIPE;
     }
-    ADD_PIPE;
 
     /* MULTI_EXIT_DISC / MED */
     if (elem->has_med) {
