@@ -158,6 +158,21 @@ void bgpstream_pfx_set_clear(bgpstream_pfx_set_t *set)
   kh_clear(bgpstream_ipv6_pfx_set, set->v6hash);
 }
 
+int bgpstream_pfx_set_iterate(bgpstream_pfx_set_t *set,
+    void (*callback)(bgpstream_pfx_t *, void *), void *userdata)
+{
+  bgpstream_ipv4_pfx_set_t v4set;
+  bgpstream_ipv6_pfx_set_t v6set;
+
+  v4set.hash = set->v4hash;
+  v6set.hash = set->v6hash;
+  if (bgpstream_ipv4_pfx_set_iterate(&v4set, callback, userdata) < 0 ||
+      bgpstream_ipv6_pfx_set_iterate(&v6set, callback, userdata) < 0) {
+    return -1;
+  }
+  return 0;
+}
+
 /* IPv4 */
 
 bgpstream_ipv4_pfx_set_t *bgpstream_ipv4_pfx_set_create()
@@ -233,6 +248,21 @@ void bgpstream_ipv4_pfx_set_destroy(bgpstream_ipv4_pfx_set_t *set)
 void bgpstream_ipv4_pfx_set_clear(bgpstream_ipv4_pfx_set_t *set)
 {
   kh_clear(bgpstream_ipv4_pfx_set, set->hash);
+}
+
+int bgpstream_ipv4_pfx_set_iterate(bgpstream_ipv4_pfx_set_t *set,
+        void (*callback)(bgpstream_pfx_t *, void *), void *userdata)
+{
+  khiter_t k;
+  bgpstream_pfx_t pfx;
+  for (k = kh_begin(set->hash); k != kh_end(set->hash); ++k) {
+    if (kh_exist(set->hash, k)) {
+      pfx.bs_ipv4 = kh_key(set->hash, k);
+      pfx.address.version = BGPSTREAM_ADDR_VERSION_IPV4;
+      callback(&pfx, userdata);
+    }
+  }
+  return 0;
 }
 
 /* IPv6 */
@@ -311,3 +341,20 @@ void bgpstream_ipv6_pfx_set_clear(bgpstream_ipv6_pfx_set_t *set)
 {
   kh_clear(bgpstream_ipv6_pfx_set, set->hash);
 }
+
+int bgpstream_ipv6_pfx_set_iterate(bgpstream_ipv6_pfx_set_t *set,
+        void (*callback)(bgpstream_pfx_t *, void *), void *userdata)
+{
+  khiter_t k;
+  bgpstream_pfx_t pfx;
+  for (k = kh_begin(set->hash); k != kh_end(set->hash); ++k) {
+    if (kh_exist(set->hash, k)) {
+      pfx.bs_ipv6 = kh_key(set->hash, k);
+      pfx.address.version = BGPSTREAM_ADDR_VERSION_IPV6;
+      callback(&pfx, userdata);
+    }
+  }
+  return 0;
+}
+
+
